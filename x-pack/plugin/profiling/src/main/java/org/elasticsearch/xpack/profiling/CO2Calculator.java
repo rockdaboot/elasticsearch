@@ -25,6 +25,8 @@ final class CO2Calculator {
     private final double customDatacenterPUE;
     private final double customKilowattsPerCoreX86;
     private final double customKilowattsPerCoreARM64;
+    private final boolean explain;
+    private final Details details = new Details();
 
     CO2Calculator(
         InstanceTypeService instanceTypeService,
@@ -33,7 +35,8 @@ final class CO2Calculator {
         Double customCO2PerKWH,
         Double customDatacenterPUE,
         Double customPerCoreWattX86,
-        Double customPerCoreWattARM64
+        Double customPerCoreWattARM64,
+        boolean explain
     ) {
         this.instanceTypeService = instanceTypeService;
         this.hostMetadata = hostMetadata;
@@ -44,20 +47,34 @@ final class CO2Calculator {
         this.customKilowattsPerCoreARM64 = customPerCoreWattARM64 == null
             ? DEFAULT_KILOWATTS_PER_CORE_ARM64
             : customPerCoreWattARM64 / 1000.0d;
+        this.explain = explain;
     }
 
     public double getAnnualCO2Tons(String hostID, long samples) {
         double annualCoreHours = CostCalculator.annualCoreHours(samplingDurationInSeconds, samples, DEFAULT_SAMPLING_FREQUENCY);
+        details.duration = samplingDurationInSeconds;
+        details.samples = samples;
+        details.samplingFrequency = DEFAULT_SAMPLING_FREQUENCY;
+        details.annualCoreHours = annualCoreHours;
 
         HostMetadata host = hostMetadata.get(hostID);
         if (host == null) {
+            details.kilowattsPerCore = DEFAULT_KILOWATTS_PER_CORE;
+            details.co2PerKWH = customCO2PerKWH;
+            details.datacenterPUE = customDatacenterPUE;
             return DEFAULT_KILOWATTS_PER_CORE * customCO2PerKWH * annualCoreHours * customDatacenterPUE;
         }
+        details.instanceType = host.instanceType;
+        details.cpuArch = host.profilingHostMachine;
 
         CostEntry costs = instanceTypeService.getCosts(host.instanceType);
         if (costs == null) {
+            details.kilowattsPerCore = getKiloWattsPerCore(host);
+            details.co2PerKWH = getCO2TonsPerKWH(host);
+            details.datacenterPUE = getDatacenterPUE(host);
             return getKiloWattsPerCore(host) * getCO2TonsPerKWH(host) * annualCoreHours * getDatacenterPUE(host);
         }
+        details.co2Factor = costs.co2Factor;
 
         return annualCoreHours * costs.co2Factor; // unit: metric tons
     }
@@ -81,6 +98,26 @@ final class CO2Calculator {
     private double getDatacenterPUE(HostMetadata host) {
         Provider provider = PROVIDERS.get(host.instanceType.provider);
         return provider == null ? customDatacenterPUE : provider.pue;
+    }
+
+    public Details getDetails() {
+        if (explain == false) {
+            return null;
+        }
+        return details;
+    }
+
+    public static class Details {
+        double duration;
+        double samples;
+        double samplingFrequency;
+        double annualCoreHours;
+        double kilowattsPerCore;
+        double co2PerKWH;
+        double datacenterPUE;
+        double co2Factor;
+        String cpuArch;
+        InstanceType instanceType;
     }
 
     private record Provider(double pue, Map<String, Double> co2TonsPerKWH) {}

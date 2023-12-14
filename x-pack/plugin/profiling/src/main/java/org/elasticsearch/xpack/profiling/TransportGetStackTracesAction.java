@@ -556,14 +556,16 @@ public class TransportGetStackTracesAction extends HandledTransportAction<GetSta
                 responseBuilder.getCustomCO2PerKWH(),
                 responseBuilder.getCustomDatacenterPUE(),
                 responseBuilder.getCustomPerCoreWattX86(),
-                responseBuilder.getCustomPerCoreWattARM64()
+                responseBuilder.getCustomPerCoreWattARM64(),
+                responseBuilder.getExplain()
             );
             CostCalculator costCalculator = new CostCalculator(
                 instanceTypeService,
                 hostMetadata,
                 responseBuilder.getRequestedDuration(),
                 responseBuilder.getAWSCostFactor(),
-                responseBuilder.getCustomCostPerCoreHour()
+                responseBuilder.getCustomCostPerCoreHour(),
+                responseBuilder.getExplain()
             );
             Map<String, TraceEvent> events = responseBuilder.getStackTraceEvents();
             List<String> missingStackTraces = new ArrayList<>();
@@ -576,6 +578,10 @@ public class TransportGetStackTracesAction extends HandledTransportAction<GetSta
                 }
                 event.annualCO2Tons += co2Calculator.getAnnualCO2Tons(hec.hostID, hec.count);
                 event.annualCostsUSD += costCalculator.annualCostsUSD(hec.hostID, hec.count);
+                if (responseBuilder.getExplain()) {
+                    event.co2Details = co2Calculator.getDetails();
+                    event.costDetails = costCalculator.getDetails();
+                }
             }
             log.debug(watch::report);
 

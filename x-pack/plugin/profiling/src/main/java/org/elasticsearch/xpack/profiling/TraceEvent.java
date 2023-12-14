@@ -14,6 +14,8 @@ final class TraceEvent {
     double annualCO2Tons;
     double annualCostsUSD;
     long count;
+    CO2Calculator.Details co2Details;
+    CostCalculator.Details costDetails;
 
     TraceEvent(String stacktraceID) {
         this.stacktraceID = stacktraceID;

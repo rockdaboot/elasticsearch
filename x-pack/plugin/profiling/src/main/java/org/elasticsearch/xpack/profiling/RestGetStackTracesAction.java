@@ -32,6 +32,8 @@ public class RestGetStackTracesAction extends BaseRestHandler {
         GetStackTracesRequest getStackTracesRequest = new GetStackTracesRequest();
         request.applyContentParser(getStackTracesRequest::parseXContent);
 
+        getStackTracesRequest.setExplain(request.paramAsBoolean("explain", false));
+
         return channel -> {
             RestActionListener<GetStackTracesResponse> listener = new RestChunkedToXContentListener<>(channel);
             RestCancellableNodeClient cancelClient = new RestCancellableNodeClient(client, request.getHttpChannel());

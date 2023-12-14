@@ -22,7 +22,8 @@ class GetStackTracesResponseBuilder {
     private List<TransportGetStackTracesAction.HostEventCount> hostEventCounts;
     private double samplingRate;
     private long totalSamples;
-    private Double requestedDuration;
+    private final boolean explain;
+    private final Double requestedDuration;
     private final Double awsCostFactor;
     private final Double customCO2PerKWH;
     private final Double customDatacenterPUE;
@@ -90,16 +91,16 @@ class GetStackTracesResponseBuilder {
         return samplingRate;
     }
 
-    public void setRequestedDuration(Double requestedDuration) {
-        this.requestedDuration = requestedDuration;
-    }
-
     public double getRequestedDuration() {
         if (requestedDuration != null) {
             return requestedDuration;
         }
         // If "requested_duration" wasn't specified, we use the time range from the query response.
         return end.getEpochSecond() - start.getEpochSecond();
+    }
+
+    public boolean getExplain() {
+        return explain;
     }
 
     public Double getAWSCostFactor() {
@@ -138,6 +139,7 @@ class GetStackTracesResponseBuilder {
         this.customPerCoreWattX86 = request.getCustomPerCoreWattX86();
         this.customPerCoreWattARM64 = request.getCustomPerCoreWattARM64();
         this.customCostPerCoreHour = request.getCustomCostPerCoreHour();
+        this.explain = request.getExplain();
     }
 
     public GetStackTracesResponse build() {

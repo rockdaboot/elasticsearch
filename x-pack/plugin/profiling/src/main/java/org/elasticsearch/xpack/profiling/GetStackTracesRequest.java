@@ -46,6 +46,8 @@ public class GetStackTracesRequest extends ActionRequest implements IndicesReque
     public static final ParseField CUSTOM_COST_PER_CORE_HOUR = new ParseField("cost_per_core_hour");
     private static final int DEFAULT_SAMPLE_SIZE = 20_000;
 
+    private boolean explain;
+
     private QueryBuilder query;
     private Integer sampleSize;
     private String indices;
@@ -122,6 +124,14 @@ public class GetStackTracesRequest extends ActionRequest implements IndicesReque
         out.writeOptionalDouble(customPerCoreWattX86);
         out.writeOptionalDouble(customPerCoreWattARM64);
         out.writeOptionalDouble(customCostPerCoreHour);
+    }
+
+    public void setExplain(boolean explain) {
+        this.explain = explain;
+    }
+
+    public boolean getExplain() {
+        return explain;
     }
 
     public Integer getSampleSize() {
