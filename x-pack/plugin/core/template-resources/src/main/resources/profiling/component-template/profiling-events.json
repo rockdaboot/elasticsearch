@@ -2,7 +2,7 @@
   "template": {
     "settings": {
       "index": {
-        "number_of_shards": 4,
+        "number_of_shards": 16,
         "number_of_replicas": 0,
         "auto_expand_replicas": "0-1",
         "max_result_window": 150000,
